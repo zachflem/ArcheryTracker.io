@@ -52,6 +52,33 @@ esac
 
 echo -e "${GREEN}Selected frontend port: ${PORT}${NC}"
 
+# Network selection
+echo -e "\n${GREEN}Docker Network Configuration${NC}"
+echo "Choose Docker network configuration:"
+echo "1) Use project default (archeryNet)"
+echo "2) Use 'reverse_proxy' to enable communication between containers"
+echo "3) Enter your own network name"
+
+read -p "Enter your choice (1-3): " NETWORK_CHOICE
+
+case $NETWORK_CHOICE in
+    1)
+        NETWORK_NAME="archeryNet"
+        ;;
+    2)
+        NETWORK_NAME="reverse_proxy"
+        ;;
+    3)
+        read -p "Enter your custom network name: " NETWORK_NAME
+        ;;
+    *)
+        echo -e "${RED}Invalid choice. Using project default.${NC}"
+        NETWORK_NAME="archeryNet"
+        ;;
+esac
+
+echo -e "${GREEN}Selected network: ${NETWORK_NAME}${NC}"
+
 # Function to generate a random string for secrets
 generate_secret() {
     local length=$1
@@ -152,10 +179,6 @@ fi
 read -p "Deploy in development mode? (y/n, default: n): " DEV_MODE
 DEV_MODE=${DEV_MODE:-n}
 
-# Prompt for npm_proxy network inclusion
-read -p "Do you need to include the docker network 'npm_proxy' ? (y/n, default: n): " INCLUDE_NPM_PROXY
-INCLUDE_NPM_PROXY=${INCLUDE_NPM_PROXY:-n}
-
 # Generate docker-compose.yml dynamically
 NODE_ENV=$([[ $DEV_MODE == "y" || $DEV_MODE == "Y" ]] && echo "development" || echo "production")
 
@@ -183,7 +206,7 @@ services:
       - JWT_SECRET=change_this_in_production
       - JWT_EXPIRE=30d
     networks:
-      - app_network
+      - ${NETWORK_NAME}
 EOF
 
 cat >> docker-compose.yml << EOF
@@ -200,16 +223,9 @@ cat >> docker-compose.yml << EOF
     depends_on:
       - backend
     networks:
-      - app_network
+      - ${NETWORK_NAME}
 EOF
 
-if [[ $INCLUDE_NPM_PROXY == "y" || $INCLUDE_NPM_PROXY == "Y" ]]; then
-cat >> docker-compose.yml << EOF
-      - npm_proxy
-EOF
-fi
-
-cat >> docker-compose.yml << EOF
 
   mongodb:
     image: mongo
@@ -220,7 +236,7 @@ cat >> docker-compose.yml << EOF
     volumes:
       - archery_mongodb_data:/data/db
     networks:
-      - app_network
+      - ${NETWORK_NAME}
 EOF
 
 cat >> docker-compose.yml << EOF
@@ -230,19 +246,15 @@ volumes:
   archery_uploads:
 EOF
 
-if [[ $INCLUDE_NPM_PROXY == "y" || $INCLUDE_NPM_PROXY == "Y" ]]; then
 cat >> docker-compose.yml << EOF
 
 networks:
-  app_network:
-  npm_proxy:
-    external: true
+  ${NETWORK_NAME}:
 EOF
-else
-cat >> docker-compose.yml << EOF
 
-networks:
-  app_network:
+if [[ "$NETWORK_NAME" == "reverse_proxy" ]]; then
+cat >> docker-compose.yml << EOF
+    external: true
 EOF
 fi
 

@@ -56,7 +56,7 @@ echo -e "${GREEN}Selected frontend port: ${PORT}${NC}"
 echo -e "\n${GREEN}Docker Network Configuration${NC}"
 echo "Choose Docker network configuration:"
 echo "1) Use project default (archeryNet)"
-echo "2) Use 'reverse_proxy' to enable communication between containers"
+echo "2) Use 'npm_proxy' to enable communication between containers"
 echo "3) Enter your own network name"
 
 read -p "Enter your choice (1-3): " NETWORK_CHOICE
@@ -66,7 +66,7 @@ case $NETWORK_CHOICE in
         NETWORK_NAME="archeryNet"
         ;;
     2)
-        NETWORK_NAME="reverse_proxy"
+        NETWORK_NAME="npm_proxy"
         ;;
     3)
         read -p "Enter your custom network name: " NETWORK_NAME

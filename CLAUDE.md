@@ -512,6 +512,11 @@ Set via `wrangler secret put`. Store locally in `apps/worker/.dev.vars` (gitigno
 
 ---
 
+## UI Style
+All visual implementation must follow `STYLE-GUIDE.md` in this repository.
+
+---
+
 ## When to Stop and Ask
 
 Stop and ask before proceeding if you encounter:
